@@ -1,66 +1,30 @@
 import os
-import ply.lex as lex
+import re
 from flask import Flask, request, render_template
 
 app = Flask(__name__)
 
-# 1. Declaración de los tokens que reconocerá el metacompilador (PLY)
-tokens = (
-    'RESERVADA',
-    'VARIABLE',
-    'NUMERO',
-    'OPERADOR',
-    'DELIMITADOR'
-)
-
-# 2. Reglas léxicas simples
-t_OPERADOR = r'[+\-*/=]'
-t_DELIMITADOR = r'[\[\]\(\)\{\},;]'
-
-
-# 3. Reglas léxicas complejas (Funciones PLY)
-def t_VARIABLE(t):
-    r'[a-zA-Z_][a-zA-Z0-9_]*'
-    # Diccionario de palabras reservadas para SVD y matrices
-    reservadas = ['SVD', 'matriz', 'diagonalizar', 'transpuesta', 'inversa', 'autovalor', 'autovector']
-    if t.value in reservadas:
-        t.type = 'RESERVADA'
-    return t
-
-
-def t_NUMERO(t):
-    r'\d+(\.\d+)?'
-    return t
-
-
-# 4. Caracteres ignorados (espacios, saltos de línea, tabulaciones)
-t_ignore = ' \t\n\r'
-
-
-# 5. Regla de manejo de errores léxicos
-def t_error(t):
-    print(f"Error léxico: Carácter ilegal '{t.value[0]}'")
-    t.lexer.skip(1)
-
-
-# Construcción del analizador léxico mediante el metacompilador PLY
-lexer = lex.lex()
-
-
 def analizar_codigo(texto):
-    lexer.input(texto)
+
+    reglas = [
+        ('RESERVADA', r'\b(SVD|matriz|diagonalizar|transpuesta|inversa|autovalor|autovector)\b'),
+        ('VARIABLE', r'\b[a-zA-Z_][a-zA-Z0-9_]*\b'),
+        ('NUMERO', r'\b\d+(\.\d+)?\b'),
+        ('OPERADOR', r'[+\-*/=]'),
+        ('DELIMITADOR', r'[\[\]\(\)\{\},;]'),
+        ('ESPACIO', r'\s+')
+    ]
+
+    patron_regex = '|'.join(f'(?P<{nombre}>{patron})' for nombre, patron in reglas)
     tokens_encontrados = []
 
-    # Extraer tokens uno por uno usando el motor de PLY
-    while True:
-        tok = lexer.token()
-        if not tok:
-            break  # Fin del archivo
-        tokens_encontrados.append(f"[{tok.type}: '{tok.value}']")
+    for coincidencia in re.finditer(patron_regex, texto):
+        tipo = coincidencia.lastgroup
+        valor = coincidencia.group(tipo)
+        if tipo != 'ESPACIO':  # omitir espacios
+            tokens_encontrados.append(f"[{tipo}: '{valor}']")
 
     return tokens_encontrados
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
