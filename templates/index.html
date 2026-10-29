@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador Léxico SVD - Globant</title>
+    <!-- Enlace al archivo CSS externo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Validación de Algoritmos Matriciales</h2>
+        <p>Sube tu archivo <strong>.txt</strong> con el código del algoritmo SVD para realizar el análisis léxico.</p>
+
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-area">
+                <label for="file" class="file-label">Seleccionar archivo de texto</label><br>
+                <input type="file" name="file" id="file" accept=".txt" required>
+                <p id="fileName" class="file-name-display">Ningún archivo seleccionado</p>
+            </div>
+            <button type="submit" id="submitBtn">Ejecutar Analizador</button>
+        </form>
+
+        <!-- Bloque de resultados dinámicos -->
+        {% if tokens %}
+            <div class="result success">
+                <h3>Tokens Extraídos (Árbol Sintáctico Base):</h3>
+                <div class="tokens-container">
+                {% for token in tokens %}
+                    <span class="token">{{ token }}</span>
+                {% endfor %}
+                </div>
+            </div>
+        {% elif error %}
+            <div class="result error">
+                <h3>Error:</h3>
+                <p>{{ error }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Enlace al script JS externo -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
